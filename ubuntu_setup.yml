@@ -1,0 +1,144 @@
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  become: no
+
+
+  vars_prompt:
+
+    - name: op_address
+      prompt: "1Password sign-in address"
+      private: no
+
+    - name: op_email
+      prompt: "1Password email address"
+      private: no
+
+    - name: op_secretkey
+      prompt: "1Password Secret Key"
+
+    - name: op_password
+      prompt: "1Password Password"
+
+
+  pre_tasks:
+   - name: 
+     ansible.builtin.assert:
+      that:
+       - op_email | regex_search("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}")
+
+  tasks:
+
+  # upgrade all packages
+   - name: upgrade all packages
+     ansible.builtin.apt:
+      name: "*"
+      state: latest
+      update_cache: yes     
+     become: yes
+
+   - name: homebrew update
+     homebrew:
+      update_homebrew: yes
+
+  # 1password
+   - name: install 1password
+     block:
+      - name: "Add the key for the 1Password apt repository"
+        become: yes
+        ansible.builtin.apt_key:
+         url: https://downloads.1password.com/linux/keys/1password.asc
+         keyring: /usr/share/keyrings/1password-archive-keyring.gpg
+
+      - name: "Add the 1Password apt repository"
+        become: yes
+        ansible.builtin.apt_repository:
+         repo: >-
+          deb
+          [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
+          https://downloads.1password.com/linux/debian/amd64
+          stable main
+         filename: 1password
+         state: present
+
+      - name: "Create a directory"
+        become: yes
+        file:
+         path: "{{ item }}"
+         state: directory
+        loop:
+         - /etc/debsig/policies/AC2D62742012EA22/
+         - /usr/share/debsig/keyrings/AC2D62742012EA22/
+
+      - name: "Add the debsig-verify policy"
+        become: yes
+        ansible.builtin.get_url:
+         url: https://downloads.1password.com/linux/debian/debsig/1password.pol
+         dest: /etc/debsig/policies/AC2D62742012EA22/1password.pol
+
+      - name: "Add an Apt signing key"
+        become: yes
+        ansible.builtin.apt_key:
+         id: 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
+         url: https://downloads.1password.com/linux/keys/1password.asc
+         keyring: /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+         state: present
+
+      - name: "Install 1Password-cli"
+        become: yes
+        ansible.builtin.apt:
+         name: 1password-cli
+         state: latest
+         update_cache: yes     
+
+      - name: "1Password Check user"
+        ansible.builtin.command: op account list --format json
+        changed_when: false
+        register: op_account_list
+
+      - name: "1Password Add an account"
+        when:
+         - op_email not in
+           ( op_account_list.stdout | from_json
+           | map(attribute='email') | list ) 
+        ansible.builtin.expect:
+         command: >-
+          op account add
+          --address    "{{ op_address }}"
+          --email      "{{ op_email }}"
+          --secret-key "{{ op_secretkey }}" 
+         responses:
+          (?i)password: '{{ op_password }}'
+
+  # dotfile
+   - name: homebrew
+     homebrew:
+      name:
+       - chezmoi
+      state: "present"
+
+  # zsh
+   - name: install zsh
+     homebrew:
+      name:
+       - zsh
+       - sheldon
+      state: present
+
+   - name: get zsh path
+     ansible.builtin.command: which zsh
+     changed_when: false
+     register: return_which_zsh
+
+   - name: chsh
+     become: yes
+     ansible.builtin.user:
+      name: "{{ ansible_user_id }}"
+      shell: "{{ return_which_zsh.stdout }}"
+
+  # Neovim
+   - name: homebrew
+     homebrew:
+      name:
+       - neovim 
+      state: "present"

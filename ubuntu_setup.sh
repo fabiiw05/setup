@@ -1,30 +1,34 @@
 #!/bin/bash
 
-
 # Homebrew
 
-if [ "`echo ${PATH} | grep '/home/linuxbrew/.linuxbrew/bin'`" ]; then
+echo -e "========"
+echo -ne "➡ Homebrew: check\r"
+
+echo ${PATH} | grep '/home/linuxbrew/.linuxbrew/bin' > /dev/null || {
 
  echo '
- # Set PATH, MANPATH, etc., for Homebrew.
- eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ${HOME}/.profile
+# Set PATH, MANPATH, etc., for Homebrew.
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ${HOME}/.profile
 
  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-fi
+}
 
 if type "brew" >/dev/null 2>&1; then
- echo -e "brew already exist"
+ echo -ne "✅ Homebrew: Installed\n"
 else
- curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+ echo ""|/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > /dev/null 2>&1
+ echo -ne "✅ Homebrew: Install\n"
 fi
 
 # Ansible
 
-echo -e "-----\nCheck Ansible"
+echo -ne "➡ Ansible: check\r"
 if type "ansible" >/dev/null 2>&1; then
-  echo -e "Ansible already exist"
+ echo -ne "✅ Ansible: Installed\n"
 else
-  echo -e "ansible was not installed"
-  brew install ansible
+ brew install ansible
+ echo -ne "✅ Ansible: Install\n"
 fi
+
+ansible-playbook ubuntu_setup.yml
