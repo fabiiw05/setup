@@ -14,7 +14,7 @@ get_distribution() {
 
 case $(get_distribution) in
   "ubuntu")
-   curl -fsSL 'https://raw.githubusercontent.com/fabiiw05/setup/main/ubuntu_setup.sh' | bash -s ;;
+   bash <(curl 'https://raw.githubusercontent.com/fabiiw05/setup/main/ubuntu_setup.sh') ;;
   *)
    echo 'Not supported.';;
 esac
