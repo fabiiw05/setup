@@ -1,0 +1,6 @@
+<div id="insertText"></div>
+<script>
+fetch( "setup.sh" ).then( res => res.text() ).then( text => {
+document.getElementById( "insertText" ).textContent = text;
+} );
+</script>
