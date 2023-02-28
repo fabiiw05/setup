@@ -1,13 +1,13 @@
 <html>
-<head><meta name="color-scheme" content="light dark"></head>
-
-<body>
-<pre style="word-wrap: break-word; white-space: pre-wrap;">
-
-<div id="insertText"></div>
-<script>
-fetch( "setup.sh" ).then( res => res.text() ).then( text => {
-document.getElementById( "insertText" ).textContent = text;
-} );
-</script>
-</pre></body></html>
+ <head>
+  <meta name="color-scheme" content="light dark">
+ </head>
+ <body>
+  <pre style="word-wrap: break-word; white-space: pre-wrap;" id="insertText"></pre>
+  <script>
+   fetch( "setup.sh" ).then( res => res.text() ).then( text => {
+   document.getElementById( "insertText" ).textContent = text;
+   } );
+  </script>
+ </body>
+</html>
