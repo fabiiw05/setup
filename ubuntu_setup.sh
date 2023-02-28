@@ -31,4 +31,4 @@ else
  echo -ne "✅ Ansible: Install\n"
 fi
 
-ansible-playbook ubuntu_setup.yml
+bash -c 'ansible-playbook ubuntu_setup.yml'
