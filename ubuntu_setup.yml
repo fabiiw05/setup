@@ -6,26 +6,29 @@
 
   vars_prompt:
 
-    - name: op_address
-      prompt: "1Password sign-in address"
-      private: no
+#    - name: chezmoi_repo
+#      prompt: "dotfiles repository url"
+#      private: no
 
-    - name: op_email
-      prompt: "1Password email address"
-      private: no
+#    - name: op_address
+#      prompt: "1Password sign-in address"
+#      private: no
 
-    - name: op_secretkey
-      prompt: "1Password Secret Key"
+#    - name: op_email
+#      prompt: "1Password email address"
+#      private: no
 
-    - name: op_password
-      prompt: "1Password Password"
+#    - name: op_secretkey
+#      prompt: "1Password Secret Key"
 
+#    - name: op_password
+#      prompt: "1Password Password"
 
-  pre_tasks:
-   - name: 
-     ansible.builtin.assert:
-      that:
-       - op_email | regex_search("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}")
+#  pre_tasks:
+#   - name: 
+#     ansible.builtin.assert:
+#      that:
+#       - op_email | regex_search("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}")
 
   tasks:
 
@@ -96,19 +99,19 @@
         changed_when: false
         register: op_account_list
 
-      - name: "1Password Add an account"
-        when:
-         - op_email not in
-           ( op_account_list.stdout | from_json
-           | map(attribute='email') | list ) 
-        ansible.builtin.expect:
-         command: >-
-          op account add
-          --address    "{{ op_address }}"
-          --email      "{{ op_email }}"
-          --secret-key "{{ op_secretkey }}" 
-         responses:
-          (?i)password: '{{ op_password }}'
+#      - name: "1Password Add an account"
+#        when:
+#         - op_email not in
+#           ( op_account_list.stdout | from_json
+#           | map(attribute='email') | list ) 
+#        ansible.builtin.expect:
+#         command: >-
+#          op account add
+#          --address    "{{ op_address }}"
+#          --email      "{{ op_email }}"
+#          --secret-key "{{ op_secretkey }}" 
+#         responses:
+#          (?i)password: '{{ op_password }}'
 
   # dotfile
    - name: homebrew
@@ -116,6 +119,19 @@
       name:
        - chezmoi
       state: "present"
+
+   - name: test
+     debug:
+      msg: "{{ lookup('pipe', 'chezmoi source-path') }}"
+
+   - name: Read all values from git config
+     community.general.git_config:
+      list_all: true
+      repo: "{{ lookup('pipe', 'chezmoi source-path') }}"
+     register: chezmoi_repo_config
+
+   - debug:
+      var: chezmoi_repo_config
 
   # zsh
    - name: install zsh
